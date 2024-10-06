@@ -67,8 +67,8 @@
 ;; Disable scrollbar
 (scroll-bar-mode -1)
 
-;; Smaller font size for line bar
-(set-face-attribute 'mode-line nil :height 100)
+;; Smaller font size for mode line
+(set-face-attribute 'mode-line nil :height 95)
 
 ;; Auto-pairs
 (electric-pair-mode t)
@@ -82,9 +82,6 @@
       show-paren-when-point-in-periphery t)
 
 (setq whitespace-line-column nil)  ; whitespace-mode
-
-;; Fonts
-;;(set-face-attribute 'default nil :font "JetBrainsMono NF Medium" :height 110)
 
 ;; I reduced the default value of 9 to simplify the font-lock keyword,
 ;; aiming to improve performance. This package helps differentiate
