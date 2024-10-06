@@ -1,0 +1,5 @@
+* =~/.emacs.d=
+
+minimal AND usable Emacs config
+
+credits to [[https://github.com/jamescherti/minimal-emacs.d][jamescherti/minimal-emacs.d]] for providing an optimized base startup
