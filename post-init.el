@@ -7,9 +7,7 @@
 (pixel-scroll-precision-mode)
 
 ;;;;;;;; Configs ;;;;;;;;
-(use-package darktooth-theme
-  :config
-  (load-theme 'darktooth-darker t))
+(load-theme 'modus-vivendi t)
 
 (load-file (concat minimal-emacs-user-directory "evil.el"))
 (load-file (concat minimal-emacs-user-directory "terminal.el"))
