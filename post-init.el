@@ -15,5 +15,6 @@
 (load-file (concat minimal-emacs-user-directory "completion.el"))
 (load-file (concat minimal-emacs-user-directory "lsp.el"))
 (load-file (concat minimal-emacs-user-directory "magit.el"))
-(load-file (concat minimal-emacs-user-directory "keybinds.el"))
 (load-file (concat minimal-emacs-user-directory "ftconfig.el"))
+(load-file (concat minimal-emacs-user-directory "music.el"))
+(load-file (concat minimal-emacs-user-directory "keybinds.el"))

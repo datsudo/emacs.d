@@ -73,6 +73,19 @@
  :prefix "SPC l"
  "d" 'consult-flymake)
 
+(general-define-key
+ :states 'normal
+ :keymaps 'override
+ :prefix "SPC m"
+ "s" 'mpd/start-music-daemon
+ "d" 'mpd/update-db
+ "b" 'emms-smart-browse
+ "r" 'emms-player-mpd-update-all-reset-cache
+ "n" 'emms-next
+ "p" 'emms-previous
+ "/" 'emms-pause
+ ";" 'emms-stop)  ;; Music Player
+
 (use-package which-key
   :ensure t
   :config
