@@ -13,3 +13,12 @@
 
 (add-hook 'python-mode-hook #'my/python-setup)
 (add-hook 'js-mode-hook #'my/js-setup)
+
+
+;; Markdown setup
+(use-package markdown-mode
+  :ensure t
+  :defer t
+  :mode ("README\\.md\\'" . gfm-mode)
+  ;; MultiMarkdown package must be installed
+  :init (setq markdown-command "multimarkdown"))
