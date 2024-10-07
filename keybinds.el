@@ -6,7 +6,7 @@
 
 ;; Remove search highlight with Esc
 (define-key evil-normal-state-map (kbd "<escape>") 'evil-ex-nohighlight)
-(global-set-key (kbd "M-`") 'vterm-toggle-cd)
+(global-set-key (kbd "M-`") 'multi-vterm-dedicated-toggle)
 
 (general-define-key  ;; Global
   :states 'normal
@@ -18,7 +18,10 @@
   :states 'normal
   :keymaps 'override
   :prefix "SPC t"
-  "o" 'vterm
+  "o" 'multi-vterm
+  "r" 'multi-vterm-project
+  "n" 'multi-vterm-next
+  "p" 'multi-vterm-prev
   "v" 'projectile-run-vterm-other-window)
 
 (general-define-key  ;; Files
