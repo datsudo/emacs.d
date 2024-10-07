@@ -7,8 +7,7 @@
 (pixel-scroll-precision-mode)
 
 ;;;;;;;; Configs ;;;;;;;;
-(load-theme 'modus-vivendi t)
-
+(load-file (concat minimal-emacs-user-directory "theme.el"))
 (load-file (concat minimal-emacs-user-directory "evil.el"))
 (load-file (concat minimal-emacs-user-directory "terminal.el"))
 (load-file (concat minimal-emacs-user-directory "navigation.el"))
