@@ -68,7 +68,7 @@
 (scroll-bar-mode -1)
 
 ;; Smaller font size for mode line
-(set-face-attribute 'mode-line nil :height 95)
+(set-face-attribute 'mode-line nil :height 110)
 
 ;; Auto-pairs
 (electric-pair-mode t)
@@ -368,8 +368,6 @@
       dired-recursive-deletes 'top
       dired-recursive-copies  'always
       dired-create-destination-dirs 'ask)
-
-;;; Font / Text scale
 
 ;; Avoid automatic frame resizing when adjusting settings.
 (setq global-text-scale-adjust-resizes-frames nil)
