@@ -67,9 +67,6 @@
 ;; Disable scrollbar
 (scroll-bar-mode -1)
 
-;; Smaller font size for mode line
-(set-face-attribute 'mode-line nil :height 110)
-
 ;; Auto-pairs
 (electric-pair-mode t)
 

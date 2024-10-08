@@ -303,17 +303,17 @@ When set to non-nil, Emacs will automatically call `package-initialize' and
                                                       ("melpa"  . 100)))
 
 ;; Remove the fucking white background color during startup
-(setq default-frame-alist '(
-                            ;; Setting the face in here prevents flashes of
-                            ;; color as the theme gets activated
-                            (background-color . "#000000")
-                            (ns-appearance . dark)
-                            (ns-transparent-titlebar . t)))
+;; (setq default-frame-alist '(
+;;                             ;; Setting the face in here prevents flashes of
+;;                             ;; color as the theme gets activated
+;;                             (background-color . "#000000")
+;;                             (ns-appearance . dark)
+;;                             (ns-transparent-titlebar . t)))
 
 ;; Full screen at startup
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-(add-to-list 'default-frame-alist '(font . "Iosevka NF Medium-12"))
+(add-to-list 'default-frame-alist '(font . "Iosevka SS15 NF SemiBold-13"))
 
 ;;; Load post-early-init.el
 (minimal-emacs-load-user-init "post-early-init.el")
