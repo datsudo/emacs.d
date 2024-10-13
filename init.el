@@ -375,6 +375,8 @@
 (setq ediff-window-setup-function #'ediff-setup-windows-plain
       ediff-split-window-function #'split-window-horizontally)
 
+(setq custom-safe-themes t)
+
 ;;; Load post-init.el
 (minimal-emacs-load-user-init "post-init.el")
 
