@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: script-block
+# key: script
+# --
+
+<script>
+    $1
+</script>
