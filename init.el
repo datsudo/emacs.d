@@ -377,6 +377,9 @@
 
 (setq custom-safe-themes t)
 
+(load "server")
+(unless (server-running-p) (server-start))
+
 ;;; Load post-init.el
 (minimal-emacs-load-user-init "post-init.el")
 
