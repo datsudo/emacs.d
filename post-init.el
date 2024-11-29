@@ -115,7 +115,6 @@
                "NVM_DIR"
                "PYENV_ROOT"
                "NPM_HOME"
-               "TYPST_ROOT"
                "MPD_HOST"
                "WGETRC"))
   (add-to-list 'exec-path-from-shell-variables var))
