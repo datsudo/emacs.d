@@ -1,5 +1,6 @@
 ;;; post-init.el --- Post Init -*- no-byte-compile: t; lexical-binding: t; -*-
 
+
 (add-hook 'after-init-hook #'global-auto-revert-mode)
 (add-hook 'after-init-hook #'recentf-mode)
 (add-hook 'after-init-hook #'savehist-mode)
@@ -13,12 +14,10 @@
 ;; Fonts
 
 (defun my/configure-font ()
-  (set-face-attribute face-font-family-alternatives '(("Pragmata Pro"
-                                                       "FiraCode Nerd Font SemBd"
-                                                       "Noto Color Emoji"
-                                                       "monospace")))
   (set-fontset-font t 'symbol "Noto Color Emoji")
-  (set-face-attribute 'default nil :font "Pragmata Pro" :height 120 :weight 'normal))
+  (set-face-attribute 'variable-pitch nil :font "Atkinson Hyperlegible-15")
+  (dolist (face '(default fixed-pitch))
+    (set-face-attribute `,face nil :font "Iosevmata Nerd Font SemiBold-12")))
 
 (if (daemonp)
     (add-hook 'after-make-frame-functions
@@ -26,6 +25,11 @@
                 (select-frame frame)
                 (my/configure-font)))
   (my/configure-font))
+
+(use-package unicode-fonts
+  :config
+  (unicode-fonts-setup))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Themes
@@ -58,10 +62,20 @@
 
 (use-package ef-themes
   :init
-  (setq ef-themes-to-toggle '(ef-dream ef-arbutus))
-  (setq ef-dream-palette-overrides '((bg-main "#14161B")))
+  (setq ef-themes-to-toggle '(ef-cherie ef-duo-light))
+  (setq ef-themes-mixed-fonts t
+        ef-themes-variable-pitch-ui nil)
+  (setq ef-elea-dark-palette-overrides '((bg-main "#14161B"))
+        ef-cherie-palette-overrides '((bg-main "#14161B"))
+        ef-deuteranopia-dark-palette-overrides '((bg-main "#14161B"))
+        ef-bio-palette-overrides '((bg-main "#14161B"))
+        ef-cherie-palette-overrides '((bg-main "#1A1D23")
+                                      (bg-hl-line "#301726")
+                                      (bg-region "#1C3659")
+                                      (bg-mode-line "#3F363A")  ;; 2C3B4F
+                                      (border "#322A2D")))
   :config
-  (load-theme 'ef-dream t))
+  (load-theme 'ef-cherie t))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Mode line
@@ -70,29 +84,23 @@
   :custom
   (nerd-icons-font-family "FiraCode Nerd Font Med"))
 
-(use-package doom-modeline
-  :ensure t
-  :init (doom-modeline-mode 1)
-  :config
-  (setq doom-modeline-height 15
-        doom-modeline-bar-width 0
-        doom-modeline-icon t
-        doom-modeline-major-mode-icon nil
-        doom-modeline-hud nil
-        doom-modeline-buffer-file-name-style 'relative-from-project
-        doom-modeline-buffer-state-icon nil
-        doom-modeline-minor-modes nil
-        doom-modeline-indent-info t
-        doom-modeline-workspace-name t))
+(use-package mini-echo
+  :init (mini-echo-mode 1))
 
-(custom-set-faces
- '(mode-line ((t (:family "Pragmata Pro" :height 1.0))))
- '(mode-line-active ((t (:family "Pragmata Pro" :height 1.0))))
- '(mode-line-inactive ((t (:family "Pragmata Pro" :height 1.0)))))
-
-(set-face-attribute 'mode-line nil :height 90)
-(set-face-attribute 'mode-line-active nil :height 90)
-(set-face-attribute 'mode-line-inactive nil :height 90)
+;; (use-package doom-modeline
+;;   :ensure t
+;;   :init (doom-modeline-mode 1)
+;;   :config
+;;   (setq doom-modeline-height 15
+;;         doom-modeline-bar-width 0
+;;         doom-modeline-icon t
+;;         doom-modeline-major-mode-icon nil
+;;         doom-modeline-hud nil
+;;         doom-modeline-buffer-file-name-style 'relative-from-project
+;;         doom-modeline-buffer-state-icon nil
+;;         doom-modeline-minor-modes nil
+;;         doom-modeline-indent-info t
+;;         doom-modeline-workspace-name t))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Read user' shell env
@@ -108,6 +116,7 @@
                "PYENV_ROOT"
                "NPM_HOME"
                "TYPST_ROOT"
+               "MPD_HOST"
                "WGETRC"))
   (add-to-list 'exec-path-from-shell-variables var))
 
@@ -130,6 +139,13 @@
   (projectile-switch-project)
   (tab-rename (projectile-project-name)))
 
+(defun my/roam-template (note-category additional-config)
+  (concat "#+TITLE: ${title}\n"
+          "#+DATE: %U\n"
+          (concat "#+FILETAGS: :"
+                  note-category
+                  ":\n\n")))
+
 (defun my/css-setup ()
   (setq css-indent-offset 2)
   (setq fill-column 120))
@@ -139,6 +155,19 @@
 
 (defun my/c-cpp-setup ()
   (setq c-ts-mode-indent-offset 4))
+
+(defun my/create-tab(name)
+  (condition-case nil
+      (unless (equal (alist-get 'name (tab-bar--current-tab))
+                     name)
+        (tab-bar-rename-tab-by-name name name))
+    (error (tab-bar-new-tab)
+           (tab-bar-rename-tab name))))
+
+(defun my/tab-bar-exists (name)
+  (member name
+          (mapcar #'(lambda (tab) (alist-get 'name tab))
+                  (tab-bar-tabs))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Evil
@@ -230,7 +259,6 @@
 ;; Frame/tabs handling
 
 (tab-bar-mode 1)
-(add-hook 'tab-bar-tab-post-open-functions (lambda (&rest _) (call-interactively #'tab-bar-rename-tab)))
 
 ;; (use-package beframe
 ;;   :init
@@ -242,9 +270,10 @@
 ;; Bufferlo
 (use-package bufferlo
   :ensure t
+  :init
+  (setq tab-bar-new-tab-choice "*scratch*")
   :config
   (bufferlo-mode 1))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Navigation
@@ -309,29 +338,29 @@
 ;; Bufferlo + consult integration
 (defvar my-consult--source-buffer
   `(:name "All Buffers"
-    :narrow   ?a
-    :hidden   t
-    :category buffer
-    :face     consult-buffer
-    :history  buffer-name-history
-    :state    ,#'consult--buffer-state
-    :items ,(lambda () (consult--buffer-query
-                        :sort 'visibility
-                        :as #'buffer-name)))
+          :narrow   ?a
+          :hidden   t
+          :category buffer
+          :face     consult-buffer
+          :history  buffer-name-history
+          :state    ,#'consult--buffer-state
+          :items ,(lambda () (consult--buffer-query
+                              :sort 'visibility
+                              :as #'buffer-name)))
   "All buffer candidate source for `consult-buffer'.")
 
 (defvar my-consult--source-local-buffer
   `(:name nil
-    :narrow   ?b
-    :category buffer
-    :face     consult-buffer
-    :history  buffer-name-history
-    :state    ,#'consult--buffer-state
-    :default  t
-    :items ,(lambda () (consult--buffer-query
-                        :predicate #'bufferlo-local-buffer-p
-                        :sort 'visibility
-                        :as #'buffer-name)))
+          :narrow   ?b
+          :category buffer
+          :face     consult-buffer
+          :history  buffer-name-history
+          :state    ,#'consult--buffer-state
+          :default  t
+          :items ,(lambda () (consult--buffer-query
+                              :predicate #'bufferlo-local-buffer-p
+                              :sort 'visibility
+                              :as #'buffer-name)))
   "Local buffer candidate source for `consult-buffer'.")
 
 (setq consult-buffer-sources '(consult--source-hidden-buffer
@@ -364,7 +393,6 @@
   (setq projectile-require-project-root nil))
 
 (projectile-mode +1)
-
 
 ;; For Go projects
 (defun my/project-find-go-module (dir)
@@ -503,38 +531,66 @@
         org-list-indent-offset 2
         org-hide-emphasis-markers t
         org-src-preserve-indentation nil
-        org-edit-src-content-indentation 0)
-  (org-indent-mode t))
+        org-edit-src-content-indentation 0))
 
 ;; Beautification
-(font-lock-add-keywords
- 'org-mode
- '(("^ *\\([-]\\) "
-    (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+
 
 (defun my/org-misc-setup ()
-  (let* ((variable-tuple
-           (cond
-             ((x-list-fonts "JetBrainsMono NF") '(:family "JetBrainsMono NF" :height 150))))
-         (fixed-tuple
-           (cond
-             ((x-list-fonts "FiraCode Nerd Font Med") '(:family "FiraCode Nerd Font Med" :height 150))))
-         (headline `(:inherit default :weight bold)))
-    (custom-theme-set-faces
-      'user
-      `(org-level-1 ((t (,@headline ,@variable-tuple :height 1.4))))
-      `(org-level-2 ((t (,@headline ,@variable-tuple :height 1.3))))
-      `(org-level-3 ((t (,@headline ,@variable-tuple :height 1.2))))
-      `(org-level-4 ((t (,@headline ,@variable-tuple :height 1.1))))
-      `(org-level-5 ((t (,@headline ,@variable-tuple :height 1.0))))
-      `(org-level-6 ((t (,@headline ,@variable-tuple))))
-      `(org-level-7 ((t (,@headline ,@variable-tuple))))
-      `(org-level-8 ((t (,@headline ,@variable-tuple))))
-      `(org-document-title ((t (,@headline ,@variable-tuple :height 1.6 :underline nil))))
-      `(variable-pitch     ((t ,@variable-tuple)))
-      `(fixed-pitch        ((t ,@fixed-tuple)))))
-  (corfu-mode -1)
-  (electric-pair-mode -1))
+  (font-lock-add-keywords
+   'org-mode
+   '(("^ *\\([-]\\) "
+      (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+  (dolist (face '((org-document-title . 1.5)
+                  (org-level-1 . 1.4)
+                  (org-level-2 . 1.3)
+                  (org-level-3 . 1.2)
+                  (org-level-4 . 1.1)
+                  (org-level-5 . 1.0)))
+    (set-face-attribute (car face) nil
+                        :font "Atkinson Hyperlegible"
+                        :weight 'bold
+                        :height (cdr face)))
+
+  (dolist (face '(org-formula
+                  org-checkbox))
+    (set-face-attribute `,face nil :inherit 'fixed-pitch :height 140))
+
+  (dolist (face '(org-code
+                  org-table
+                  org-verbatim))
+    (set-face-attribute `,face nil :inherit '(shadow fixed-pitch) :height 150))
+
+  (dolist (face '(org-special-keyword org-meta-line))
+    (set-face-attribute `,face nil :inherit '(font-lock-comment-face fixed-pitch) :height 140))
+
+  (variable-pitch-mode 1))
+
+;; (defun my/org-misc-setup ()
+;;   (let* ((variable-tuple
+;;           (cond
+;;            ((x-list-fonts "Atkinson Hyperlegible") '(:family "Atkinson Hyperlegible-15"))))
+;;          (fixed-tuple
+;;           (cond
+;;            ((x-list-fonts "Iosevmata Nerd Font") '(:family "Iosevmata Nerd Font-14"))))
+;;          (headline `(:inherit default :weight bold)))
+;;     (custom-theme-set-faces
+;;      'user
+;;      `(org-level-1 ((t (,@headline ,@variable-tuple :height 1.4))))
+;;      `(org-level-2 ((t (,@headline ,@variable-tuple :height 1.3))))
+;;      `(org-level-3 ((t (,@headline ,@variable-tuple :height 1.2))))
+;;      `(org-level-4 ((t (,@headline ,@variable-tuple :height 1.1))))
+;;      `(org-level-5 ((t (,@headline ,@variable-tuple :height 1.0))))
+;;      `(org-level-6 ((t (,@headline ,@variable-tuple))))
+;;      `(org-level-7 ((t (,@headline ,@variable-tuple))))
+;;      `(org-level-8 ((t (,@headline ,@variable-tuple))))
+;;      `(org-document-title ((t (,@headline ,@variable-tuple :height 1.6 :underline nil))))
+;;      `(variable-pitch     ((t ,@variable-tuple)))
+;;      `(fixed-pitch        ((t ,@fixed-tuple)))))
+;;   (corfu-mode -1)
+;;   (electric-pair-mode -1))
+;; 
+(add-hook 'org-mode-hook 'my/org-misc-setup)
 
 (use-package org-superstar
   :ensure t
@@ -544,11 +600,60 @@
   (setq org-superstar-leading-bullet ?\s
         org-indent-mode-turns-on-hiding-stars nil))
 
-(add-hook 'org-mode-hook 'variable-pitch-mode)
-(add-hook 'org-mode-hook 'my/org-misc-setup)
+;; (add-hook 'org-mode-hook 'variable-pitch-mode)
+;; (add-hook 'org-mode-hook 'my/org-misc-setup)
 
 (with-eval-after-load "org"
   (require 'org-tempo))
+
+;; Org Roam
+(use-package org-roam
+  :ensure t
+  :config
+  (org-roam-db-autosync-mode)
+  :custom
+  (org-roam-directory (file-truename "~/Documents/org/roam"))
+  (org-roam-complete-everywhere t)
+  (org-roam-capture-templates `(("r" "Resource Note" plain "%?"
+                                 :if-new (file+head "resources/${slug}.org"
+                                                    ,(my/roam-template "resource" ""))
+                                 :immediate-finish t
+                                 :unnarrowed t)
+                                ("n" "Note" plain "%?"
+                                 :if-new (file+head "notes/${slug}.org"
+                                                    ,(my/roam-template "draft" ""))
+                                 :immediate-finish t
+                                 :unnarrowed t)))
+  (org-roam-node-display-template (concat "${title:100}  "
+                                          (propertize "${tags:50}" 'face 'org-tag))))
+
+(setq org-bookmark-names-plist nil)
+
+(add-hook 'org-mode-hook (lambda () (local-set-key (kbd "C-i") #'org-roam-node-insert)))
+
+(add-hook 'org-mode-hook 'org-modern-mode)
+
+;; Search org roam contents using ripgrep
+(defun my/org-roam-rg-search ()
+  (interactive)
+  (let ((consult-ripgrep-command
+         "rg --null --ignore-case --type org --line-buffered --color=always --max-columns=500 --no-heading --line-number . -e ARG OPTS"))
+    (consult-ripgrep org-roam-directory)))
+
+;; Add UI for graphs and note preview
+(use-package websocket :after org-roam)
+(use-package org-roam-ui
+  :after org-roam
+  :defer t
+  :custom
+  (org-roam-ui-update-on-save t))
+
+(use-package olivetti
+  :hook
+  (org-mode . olivetti-mode))
+
+(use-package org-autolist
+  :hook (org-mode . org-autolist-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Filetype-specific configs
@@ -559,6 +664,9 @@
   ;; MultiMarkdown package must be installed
   ;; :init (setq markdown-command "multimarkdown")
   )
+
+(add-hook 'markdown-mode-hook 'display-fill-column-indicator-mode)
+(add-hook 'markdown-mode-hook 'auto-fill-mode)
 
 (use-package poetry :ensure t :defer t)
 
@@ -586,6 +694,14 @@
 ;; C-C++ setup
 (add-hook 'c-ts-mode-hook #'my/c-cpp-setup)
 (add-hook 'c++-ts-mode-hook #'my/c-cpp-setup)
+
+;; Lua setup
+(use-package lua-mode
+  :init
+  (setq lua-indent-level 2)
+  :config
+  (add-to-list 'auto-mode-alist '("\\.lua$" . lua-mode))
+  (add-to-list 'interpreter-mode-alist '("lua" . lua-mode)))
 
 ;; Enable visual line mode in some modes
 (my/add-to-multiple-hooks 'visual-line-mode
@@ -635,7 +751,14 @@
   (setq jsonrpc-event-hook nil)
   (setq eglot-autoshutdown t)
   :hook
-  ((python-ts-mode js-ts-mode typescript-ts-mode c-ts-mode c++-ts-mode go-ts-mode typst-ts-mode) . eglot-ensure))
+  (js-ts-mode . eglot-ensure)
+  (python-ts-mode . eglot-ensure)
+  (typescript-ts-mode . eglot-ensure)
+  (c-ts-mode . eglot-ensure)
+  (c++-ts-mode . eglot-ensure)
+  (go-ts-mode . eglot-ensure)
+  (typst-ts-mode . eglot-ensure)
+  (lua-ts-mode . eglot-ensure))
 
 (with-eval-after-load 'eglot
   (add-to-list 'eglot-stay-out-of 'flymake)
@@ -644,6 +767,9 @@
   (add-to-list 'eglot-server-programs
                '(js-ts-mode . ("typescript-language-server" "--stdio"))
                '(typescript-ts-mode . ("typescript-language-server" "--stdio")))
+
+  (add-to-list 'eglot-server-programs
+               '(lua-mode . ("lua-language-server" "--stdio")))
 
   (add-to-list 'eglot-server-programs '(c++-ts-mode . ("ccls"))))
 
@@ -666,10 +792,7 @@
   (emms-all)
   (setq emms-player-list '(emms-player-mpd)
         emms-info-functions '(emms-info-mpd)
-        emms-player-mpd-server-name "0.0.0.0"
-        emms-player-mpd-server-port "6600"))
-
-(setq mpc-host "0.0.0.0:6600")
+        emms-player-mpd-server-name "127.0.0.1"))
 
 (defun mpd/update-db ()
   (interactive)
@@ -691,11 +814,33 @@
   :init
   (pdf-tools-install)
   :config
-  (setq pdf-view-midnight-colors '("#ffffff" . "#14161B")))
+  (setq pdf-view-midnight-colors '("#ffffff" . "#1A1D23")))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; RSS FEED
+
+(use-package elfeed
+  :config
+  (setq elfeed-feeds '(("https://hackernewsrss.com/feed.xml" hn-front))
+        elfeed-search-filter "@1-week-ago "))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Other Utils.
 (use-package sudo-edit)
+
+(use-package persistent-scratch)
+
+(load-file "~/.emacs.d/lib/dired-plus.el")
+(require 'dired+)
+(diredp-toggle-find-file-reuse-dir 1)
+(setq dired-listing-switches "-alh --group-directories-first")  ;; display "human-readable" file size
+
+(setq-default ibuffer-saved-filter-groups
+              `(("Default"
+                 ;; I create a group call Dired, which contains all buffer in dired-mode
+                 ("Dired" (mode . dired-mode))
+                 ("Temporary" (name . "\*.*\*")))))
+(add-hook 'ibuffer-mode-hook #'(lambda () (ibuffer-switch-to-saved-filter-groups "Default")))
 
 ;; For ligatures
 (use-package ligature
@@ -707,64 +852,92 @@
   (ligature-set-ligatures 'eww-mode '("ff" "fi" "ffi"))
   ;; Enable all Cascadia and Fira Code ligatures in programming modes
   (ligature-set-ligatures 'prog-mode
-                        '(;; == === ==== => =| =>>=>=|=>==>> ==< =/=//=// =~
-                          ;; =:= =!=
-                          ("=" (rx (+ (or ">" "<" "|" "/" "~" ":" "!" "="))))
-                          ;; ;; ;;;
-                          (";" (rx (+ ";")))
-                          ;; && &&&
-                          ("&" (rx (+ "&")))
-                          ;; !! !!! !. !: !!. != !== !~
-                          ("!" (rx (+ (or "=" "!" "\." ":" "~"))))
-                          ;; ?? ??? ?:  ?=  ?.
-                          ("?" (rx (or ":" "=" "\." (+ "?"))))
-                          ;; %% %%%
-                          ("%" (rx (+ "%")))
-                          ;; |> ||> |||> ||||> |] |} || ||| |-> ||-||
-                          ;; |->>-||-<<-| |- |== ||=||
-                          ;; |==>>==<<==<=>==//==/=!==:===>
-                          ("|" (rx (+ (or ">" "<" "|" "/" ":" "!" "}" "\]"
-                                          "-" "=" ))))
-                          ;; \\ \\\ \/
-                          ("\\" (rx (or "/" (+ "\\"))))
-                          ;; ++ +++ ++++ +>
-                          ("+" (rx (or ">" (+ "+"))))
-                          ;; :: ::: :::: :> :< := :// ::=
-                          (":" (rx (or ">" "<" "=" "//" ":=" (+ ":"))))
-                          ;; // /// //// /\ /* /> /===:===!=//===>>==>==/
-                          ("/" (rx (+ (or ">"  "<" "|" "/" "\\" "\*" ":" "!"
-                                          "="))))
-                          ;; .. ... .... .= .- .? ..= ..<
-                          ("\." (rx (or "=" "-" "\?" "\.=" "\.<" (+ "\."))))
-                          ;; -- --- ---- -~ -> ->> -| -|->-->>->--<<-|
-                          ("-" (rx (+ (or ">" "<" "|" "~" "-"))))
-                          ;; *> */ *)  ** *** ****
-                          ("*" (rx (or ">" "/" ")" (+ "*"))))
-                          ;; www wwww
-                          ("w" (rx (+ "w")))
-                          ;; <> <!-- <|> <: <~ <~> <~~ <+ <* <$ </  <+> <*>
-                          ;; <$> </> <|  <||  <||| <|||| <- <-| <-<<-|-> <->>
-                          ;; <<-> <= <=> <<==<<==>=|=>==/==//=!==:=>
-                          ;; << <<< <<<<
-                          ("<" (rx (+ (or "\+" "\*" "\$" "<" ">" ":" "~"  "!"
-                                          "-"  "/" "|" "="))))
-                          ;; >: >- >>- >--|-> >>-|-> >= >== >>== >=|=:=>>
-                          ;; >> >>> >>>>
-                          (">" (rx (+ (or ">" "<" "|" "/" ":" "=" "-"))))
-                          ;; #: #= #! #( #? #[ #{ #_ #_( ## ### #####
-                          ("#" (rx (or ":" "=" "!" "(" "\?" "\[" "{" "_(" "_"
-                                       (+ "#"))))
-                          ;; ~~ ~~~ ~=  ~-  ~@ ~> ~~>
-                          ("~" (rx (or ">" "=" "-" "@" "~>" (+ "~"))))
-                          ;; __ ___ ____ _|_ __|____|_
-                          ("_" (rx (+ (or "_" "|"))))
-                          ;; Fira code: 0xFF 0x12
-                          ("0" (rx (and "x" (+ (in "A-F" "a-f" "0-9")))))
-                          ;; Fira code:
-                          "Fl"  "Tl"  "fi"  "fj"  "fl"  "ft"
-                          ;; The few not covered by the regexps.
-                          "{|"  "[|"  "]#"  "(*"  "}#"  "$>"  "^="))
+                          '(;; == === ==== => =| =>>=>=|=>==>> ==< =/=//=// =~
+                            ;; =:= =!=
+                            ("=" (rx (+ (or ">" "<" "|" "/" "~" ":" "!" "="))))
+                            ;; ;; ;;;
+                            (";" (rx (+ ";")))
+                            ;; && &&&
+                            ("&" (rx (+ "&")))
+                            ;; !! !!! !. !: !!. != !== !~
+                            ("!" (rx (+ (or "=" "!" "\." ":" "~"))))
+                            ;; ?? ??? ?:  ?=  ?.
+                            ("?" (rx (or ":" "=" "\." (+ "?"))))
+                            ;; %% %%%
+                            ("%" (rx (+ "%")))
+                            ;; |> ||> |||> ||||> |] |} || ||| |-> ||-||
+                            ;; |->>-||-<<-| |- |== ||=||
+                            ;; |==>>==<<==<=>==//==/=!==:===>
+                            ("|" (rx (+ (or ">" "<" "|" "/" ":" "!" "}" "\]"
+                                            "-" "=" ))))
+                            ;; \\ \\\ \/
+                            ("\\" (rx (or "/" (+ "\\"))))
+                            ;; ++ +++ ++++ +>
+                            ("+" (rx (or ">" (+ "+"))))
+                            ;; :: ::: :::: :> :< := :// ::=
+                            (":" (rx (or ">" "<" "=" "//" ":=" (+ ":"))))
+                            ;; // /// //// /\ /* /> /===:===!=//===>>==>==/
+                            ("/" (rx (+ (or ">"  "<" "|" "/" "\\" "\*" ":" "!"
+                                            "="))))
+                            ;; .. ... .... .= .- .? ..= ..<
+                            ("\." (rx (or "=" "-" "\?" "\.=" "\.<" (+ "\."))))
+                            ;; -- --- ---- -~ -> ->> -| -|->-->>->--<<-|
+                            ("-" (rx (+ (or ">" "<" "|" "~" "-"))))
+                            ;; *> */ *)  ** *** ****
+                            ("*" (rx (or ">" "/" ")" (+ "*"))))
+                            ;; www wwww
+                            ("w" (rx (+ "w")))
+                            ;; <> <!-- <|> <: <~ <~> <~~ <+ <* <$ </  <+> <*>
+                            ;; <$> </> <|  <||  <||| <|||| <- <-| <-<<-|-> <->>
+                            ;; <<-> <= <=> <<==<<==>=|=>==/==//=!==:=>
+                            ;; << <<< <<<<
+                            ("<" (rx (+ (or "\+" "\*" "\$" "<" ">" ":" "~"  "!"
+                                            "-"  "/" "|" "="))))
+                            ;; >: >- >>- >--|-> >>-|-> >= >== >>== >=|=:=>>
+                            ;; >> >>> >>>>
+                            (">" (rx (+ (or ">" "<" "|" "/" ":" "=" "-"))))
+                            ;; #: #= #! #( #? #[ #{ #_ #_( ## ### #####
+                            ("#" (rx (or ":" "=" "!" "(" "\?" "\[" "{" "_(" "_"
+                                         (+ "#"))))
+                            ;; ~~ ~~~ ~=  ~-  ~@ ~> ~~>
+                            ("~" (rx (or ">" "=" "-" "@" "~>" (+ "~"))))
+                            ;; __ ___ ____ _|_ __|____|_
+                            ("_" (rx (+ (or "_" "|"))))
+                            ;; Fira code: 0xFF 0x12
+                            ("0" (rx (and "x" (+ (in "A-F" "a-f" "0-9")))))
+                            ;; Fira code:
+                            "Fl"  "Tl"  "fi"  "fj"  "fl"  "ft"
+                            ;; The few not covered by the regexps.
+                            "{|"  "[|"  "]#"  "(*"  "}#"  "$>"  "^="))
   (global-ligature-mode t))
+
+(defun my/music-tab ()
+  (interactive)
+  (if (equal (my/tab-bar-exists "music") nil)
+      (funcall (lambda ()
+                 (my/create-tab "music")
+                 (tab-switch "music")
+                 (emms-smart-browse)
+                 (emms-browse-by-album)))
+      (tab-switch "music")))
+
+(defun my/files-tab ()
+  (interactive)
+  (if (equal (my/tab-bar-exists "files") nil)
+      (let ((buf-dir (file-name-directory (buffer-file-name))))
+        (funcall (lambda ()
+                   (my/create-tab "files")
+                   (tab-switch "files")
+                   (dired buf-dir))))
+      (tab-switch "files")))
+
+(defun my/terms-tab ()
+  (interactive)
+  (if (equal (my/tab-bar-exists "terminal") nil)
+      (funcall (lambda ()
+                 (my/create-tab "terminal")
+                 (funcall (lambda () (tab-switch "terminal") (multi-vterm)))))
+      (funcall (lambda () (tab-switch "terminal") (multi-vterm)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Keybinds
@@ -799,6 +972,7 @@
  :keymaps 'override
  :prefix "SPC"
  "SPC" 'consult-buffer
+ "x" 'execute-extended-command
  "RET" 'bookmark-jump)
 
 (general-define-key  ;; Terminal
@@ -834,9 +1008,10 @@
  "d" 'kill-this-buffer
  "b" 'consult-buffer
  "v" 'revert-buffer
+ "i" 'ibuffer
  "x" 'delete-window)
 
-(general-define-key ;;
+(general-define-key ;; Tab management
  :states 'normal
  :keymaps 'override
  :prefix "SPC TAB"
@@ -844,6 +1019,18 @@
  "r" 'tab-rename
  "n" 'tab-new
  "d" 'tab-close)
+
+(general-define-key ;; Window management
+ :states 'normal
+ :keymaps 'override
+ :prefix "SPC w"
+ "s" 'evil-window-split
+ "v" 'evil-window-vsplit
+ "h" 'evil-window-left
+ "j" 'evil-window-down
+ "k" 'evil-window-up
+ "l" 'evil-window-right
+ "x" 'delete-window)
 
 (general-define-key  ;; Bookmark
  :states 'normal
@@ -861,6 +1048,15 @@
  :prefix "SPC s"
  "f" 'find-file
  "l" 'consult-line)
+
+(general-define-key  ;; Org
+ :states 'normal
+ :keymaps 'override
+ :prefix "SPC n"
+ "f" 'org-roam-node-find
+ "r" 'my/org-roam-rg-search
+ "o" 'org-open-at-point
+ "b" 'org-mark-ring-goto) 
 
 (general-define-key  ;; Help
  :states 'normal
@@ -897,7 +1093,7 @@
  :prefix "SPC m"
  "s" 'mpd/start-music-daemon
  "d" 'mpd/update-db
- "b" 'emms-smart-browse
+ "b" 'my/music-tab
  "r" 'emms-player-mpd-update-all-reset-cache
  "c" 'emms-player-mpd-connect
  "n" 'emms-next
@@ -905,6 +1101,13 @@
  "x" 'emms-shuffle
  "/" 'emms-pause
  ";" 'emms-stop)
+
+(general-define-key
+ :states 'normal
+ :keymaps 'override
+ :prefix "SPC d"
+ "o" 'elfeed
+ "u" 'elfeed-update)
 
 (general-define-key
  :states 'visual
