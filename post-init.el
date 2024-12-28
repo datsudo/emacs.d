@@ -17,7 +17,7 @@
   (set-fontset-font t 'symbol "Noto Color Emoji")
   (set-face-attribute 'variable-pitch nil :font "Atkinson Hyperlegible-15")
   (dolist (face '(default fixed-pitch))
-    (set-face-attribute `,face nil :font "Iosevmata Nerd Font SemiBold-12")))
+    (set-face-attribute `,face nil :font "Iosevmata Nerd Font Condensed SemiBold-12")))
 
 (if (daemonp)
     (add-hook 'after-make-frame-functions
@@ -60,22 +60,35 @@
 ;;   :config
 ;;   (load-theme 'kaolin-valley-dark t))
 
-(use-package ef-themes
-  :init
-  (setq ef-themes-to-toggle '(ef-cherie ef-duo-light))
-  (setq ef-themes-mixed-fonts t
-        ef-themes-variable-pitch-ui nil)
-  (setq ef-elea-dark-palette-overrides '((bg-main "#14161B"))
-        ef-cherie-palette-overrides '((bg-main "#14161B"))
-        ef-deuteranopia-dark-palette-overrides '((bg-main "#14161B"))
-        ef-bio-palette-overrides '((bg-main "#14161B"))
-        ef-cherie-palette-overrides '((bg-main "#1A1D23")
-                                      (bg-hl-line "#301726")
-                                      (bg-region "#1C3659")
-                                      (bg-mode-line "#3F363A")  ;; 2C3B4F
-                                      (border "#322A2D")))
-  :config
-  (load-theme 'ef-cherie t))
+(defun my/enable-everforest ()
+  (add-to-list 'custom-theme-load-path (concat minimal-emacs-user-directory "themes/everforest"))
+  (load-theme 'everforest-hard-dark t))
+
+(defun my/clone-everforest ()
+  (let ((everforest-repo "https://git.sr.ht/~theorytoe/everforest-theme"))
+    (shell-command (concat "git clone" everforest-repo minimal-emacs-user-directory "themes/everforest"))))
+
+(if (not (file-directory-p (concat minimal-emacs-user-directory "themes/everforest")))
+    (my/clone-everforest)
+  (my/enable-everforest))
+
+;; (use-package ef-themes
+;;   :init
+;;   (setq ef-themes-to-toggle '(ef-cherie ef-duo-light))
+;;   (setq ef-themes-mixed-fonts t
+;;         ef-themes-variable-pitch-ui nil)
+;;   (setq ef-elea-dark-palette-overrides '((bg-main "#14161B"))
+;;         ef-cherie-palette-overrides '((bg-main "#14161B"))
+;;         ef-deuteranopia-dark-palette-overrides '((bg-main "#14161B"))
+;;         ef-bio-palette-overrides '((bg-main "#14161B"))
+;;         ef-cherie-palette-overrides '((bg-main "#1A1D23")
+;;                                       (bg-hl-line "#301726")
+;;                                       (bg-region "#1C3659")
+;;                                       (bg-mode-line "#3F363A")  ;; 2C3B4F
+;;                                       (border "#322A2D")))
+;;   :config
+;;   (load-theme 'ef-cherie t))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Mode line
@@ -83,9 +96,6 @@
 (use-package nerd-icons
   :custom
   (nerd-icons-font-family "FiraCode Nerd Font Med"))
-
-(use-package mini-echo
-  :init (mini-echo-mode 1))
 
 ;; (use-package doom-modeline
 ;;   :ensure t
@@ -104,6 +114,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Read user' shell env
+(use-package exec-path-from-shell)
 (require 'exec-path-from-shell)
 
 (dolist (var '("PATH"
@@ -388,7 +399,7 @@
   :ensure t
   :init
   (setq projectile-project-search-path
-        '("~/Documents/dev" "~/Documents/dev-scratch"))
+        '("~/dev"))
   (setq projectile-require-project-root nil))
 
 (projectile-mode +1)
@@ -411,11 +422,11 @@
   :hook ((prog-mode . corfu-mode)
          (eshell-mode . corfu-mode))
   :custom
-  (corfu-cycle t)
-  (corfu-auto t)
-  (corfu-auto-delay 0)
-  (corfu-auto-prefix 1)
-  (corfu-popupinfo-delay '(0.5 0.2))
+  ;; (corfu-cycle t)
+  ;; (corfu-auto t)
+  ;; (corfu-auto-delay 0)
+  ;; (corfu-auto-prefix 1)
+  ;; (corfu-popupinfo-delay '(0.5 0.2))
   ;; Hide commands in M-x which do not apply to the current mode.
   (read-extended-command-predicate #'command-completion-default-include-p)
   ;; Disable Ispell completion function. As an alternative try `cape-dict'.
@@ -630,7 +641,7 @@
 
 (add-hook 'org-mode-hook (lambda () (local-set-key (kbd "C-i") #'org-roam-node-insert)))
 
-(add-hook 'org-mode-hook 'org-modern-mode)
+;; (add-hook 'org-mode-hook 'org-modern-mode)
 
 ;; Search org roam contents using ripgrep
 (defun my/org-roam-rg-search ()
@@ -675,7 +686,6 @@
                     :files (:defaults "*.el"))
   :config
   (setq typst-ts-mode-indent-offset 2))
-(with-temp-buffer (typst-ts-mode))
 
 (use-package yaml-mode :ensure t :defer t)
 (use-package json-mode :ensure t :defer t)
@@ -840,6 +850,12 @@
                  ("Dired" (mode . dired-mode))
                  ("Temporary" (name . "\*.*\*")))))
 (add-hook 'ibuffer-mode-hook #'(lambda () (ibuffer-switch-to-saved-filter-groups "Default")))
+
+
+;; Reading CSV files
+(use-package csv-mode
+  :config
+  (add-hook 'csv-mode-hook 'csv-align-mode))
 
 ;; For ligatures
 (use-package ligature
