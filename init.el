@@ -59,7 +59,6 @@
 ;;; Line Numbers
 (defun my/setup-line-numbers()
   (display-line-numbers-mode)
-  (hl-line-mode)
   (setq display-line-numbers 'relative))
 (add-hook 'prog-mode-hook #'my/setup-line-numbers)
 ;; (setq display-line-numbers 'relative)
