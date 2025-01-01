@@ -4,7 +4,7 @@
 ;; URL: https://github.com/jamescherti/minimal-emacs.d
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: maint
-;; Version: 1.1.0
+;; Version: 1.1.1
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;;; Commentary:
@@ -62,22 +62,6 @@ When set to non-nil, Emacs will automatically call `package-initialize' and
       (expand-file-name "themes/" minimal-emacs-user-directory))
 (setq custom-file (expand-file-name "custom.el" minimal-emacs-user-directory))
 
-;;; Misc
-
-(set-language-environment "UTF-8")
-
-;; Set-language-environment sets default-input-method, which is unwanted.
-(setq default-input-method nil)
-
-;; Some features that are not represented as packages can be found in
-;; `features', but this can be inconsistent. The following enforce consistency:
-(if (fboundp #'json-parse-string)
-    (push 'jansson features))
-(if (string-match-p "HARFBUZZ" system-configuration-features) ; no alternative
-    (push 'harfbuzz features))
-(if (bound-and-true-p module-file-suffix)
-    (push 'dynamic-modules features))
-
 ;;; Garbage collection
 ;; Garbage collection significantly affects startup times. This setting delays
 ;; garbage collection during startup but will be reset later.
@@ -88,18 +72,17 @@ When set to non-nil, Emacs will automatically call `package-initialize' and
           (lambda ()
             (setq gc-cons-threshold minimal-emacs-gc-cons-threshold)))
 
+;;; Misc
+
+(set-language-environment "UTF-8")
+
+;; Set-language-environment sets default-input-method, which is unwanted.
+(setq default-input-method nil)
+
 ;;; Performance
 
 ;; Prefer loading newer compiled files
 (setq load-prefer-newer t)
-
-;; Reduce rendering/line scan work by not rendering cursors or regions in
-;; non-focused windows.
-(setq-default cursor-in-non-selected-windows nil)
-(setq highlight-nonselected-windows nil)
-
-;; Don't ping things that look like domain names.
-(setq ffap-machine-p-known 'reject)
 
 ;; Font compacting can be very resource-intensive, especially when rendering
 ;; icon fonts on Windows. This will increase memory usage.
@@ -132,18 +115,21 @@ When set to non-nil, Emacs will automatically call `package-initialize' and
 
   (unless noninteractive
     (unless minimal-emacs-debug
-      ;; Suppress redisplay and redraw during startup to avoid delays and
-      ;; prevent flashing an unstyled Emacs frame.
-      (setq-default inhibit-redisplay t
-                    inhibit-message t)
+      (unless minimal-emacs-debug
+        ;; Suppress redisplay and redraw during startup to avoid delays and
+        ;; prevent flashing an unstyled Emacs frame.
+        ;; (setq-default inhibit-redisplay t) ; Can cause artifacts
+        (setq-default inhibit-message t)
 
-      ;; Reset the above variables to prevent Emacs from appearing frozen or
-      ;; visually corrupted after startup or if a startup error occurs.
-      (defun minimal-emacs--reset-inhibited-vars-h ()
-        (setq-default inhibit-redisplay nil
-                      inhibit-message nil)
-        (remove-hook 'post-command-hook #'minimal-emacs--reset-inhibited-vars-h))
-      (add-hook 'post-command-hook #'minimal-emacs--reset-inhibited-vars-h -100)
+        ;; Reset the above variables to prevent Emacs from appearing frozen or
+        ;; visually corrupted after startup or if a startup error occurs.
+        (defun minimal-emacs--reset-inhibited-vars-h ()
+          ;; (setq-default inhibit-redisplay nil) ; Can cause artifacts
+          (setq-default inhibit-message nil)
+          (remove-hook 'post-command-hook #'minimal-emacs--reset-inhibited-vars-h))
+
+        (add-hook 'post-command-hook
+                  #'minimal-emacs--reset-inhibited-vars-h -100))
 
       (dolist (buf (buffer-list))
         (with-current-buffer buf
@@ -283,12 +269,6 @@ When set to non-nil, Emacs will automatically call `package-initialize' and
   (setq use-file-dialog nil)
   (setq use-dialog-box nil))
 
-;; Allow for shorter responses: "y" for yes and "n" for no.
-(if (boundp 'use-short-answers)
-    (setq use-short-answers t)
-  (advice-add #'yes-or-no-p :override #'y-or-n-p))
-(defalias #'view-hello-file #'ignore)  ; Never show the hello file
-
 ;;; package.el
 (setq package-enable-at-startup nil)
 (setq package-quickstart nil)
@@ -300,22 +280,10 @@ When set to non-nil, Emacs will automatically call `package-initialize' and
 (customize-set-variable 'package-archive-priorities '(("gnu"    . 99)
                                                       ("nongnu" . 80)
                                                       ("stable" . 70)
-                                                      ("melpa"  . 100)))
-
-;; Remove the fucking white background color during startup
-;; (setq default-frame-alist '(
-;;                             ;; Setting the face in here prevents flashes of
-;;                             ;; color as the theme gets activated
-;;                             (background-color . "#000000")
-;;                             (ns-appearance . dark)
-;;                             (ns-transparent-titlebar . t)))
-
-;; Full screen at startup
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
+                                                      ("melpa"  . 0)))
 
 ;;; Load post-early-init.el
 (minimal-emacs-load-user-init "post-early-init.el")
-
 
 (provide 'early-init)
 
