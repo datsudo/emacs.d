@@ -97,20 +97,20 @@
   :custom
   (nerd-icons-font-family "FiraCode Nerd Font Med"))
 
-;; (use-package doom-modeline
-;;   :ensure t
-;;   :init (doom-modeline-mode 1)
-;;   :config
-;;   (setq doom-modeline-height 15
-;;         doom-modeline-bar-width 0
-;;         doom-modeline-icon t
-;;         doom-modeline-major-mode-icon nil
-;;         doom-modeline-hud nil
-;;         doom-modeline-buffer-file-name-style 'relative-from-project
-;;         doom-modeline-buffer-state-icon nil
-;;         doom-modeline-minor-modes nil
-;;         doom-modeline-indent-info t
-;;         doom-modeline-workspace-name t))
+(use-package doom-modeline
+  :ensure t
+  :init (doom-modeline-mode 1)
+  :config
+  (setq doom-modeline-height 15
+        doom-modeline-bar-width 0
+        doom-modeline-icon t
+        doom-modeline-major-mode-icon nil
+        doom-modeline-hud nil
+        doom-modeline-buffer-file-name-style 'relative-from-project
+        doom-modeline-buffer-state-icon nil
+        doom-modeline-minor-modes nil
+        doom-modeline-indent-info t
+        doom-modeline-workspace-name t))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Read user' shell env
@@ -545,7 +545,6 @@
 
 ;; Beautification
 
-
 (defun my/org-misc-setup ()
   (font-lock-add-keywords
    'org-mode
@@ -574,33 +573,12 @@
   (dolist (face '(org-special-keyword org-meta-line))
     (set-face-attribute `,face nil :inherit '(font-lock-comment-face fixed-pitch) :height 140))
 
-  (variable-pitch-mode 1))
+  (setq fill-column 80)
+  (variable-pitch-mode 1)
+  (org-indent-mode 1))
 
-;; (defun my/org-misc-setup ()
-;;   (let* ((variable-tuple
-;;           (cond
-;;            ((x-list-fonts "Atkinson Hyperlegible") '(:family "Atkinson Hyperlegible-15"))))
-;;          (fixed-tuple
-;;           (cond
-;;            ((x-list-fonts "Iosevmata Nerd Font") '(:family "Iosevmata Nerd Font-14"))))
-;;          (headline `(:inherit default :weight bold)))
-;;     (custom-theme-set-faces
-;;      'user
-;;      `(org-level-1 ((t (,@headline ,@variable-tuple :height 1.4))))
-;;      `(org-level-2 ((t (,@headline ,@variable-tuple :height 1.3))))
-;;      `(org-level-3 ((t (,@headline ,@variable-tuple :height 1.2))))
-;;      `(org-level-4 ((t (,@headline ,@variable-tuple :height 1.1))))
-;;      `(org-level-5 ((t (,@headline ,@variable-tuple :height 1.0))))
-;;      `(org-level-6 ((t (,@headline ,@variable-tuple))))
-;;      `(org-level-7 ((t (,@headline ,@variable-tuple))))
-;;      `(org-level-8 ((t (,@headline ,@variable-tuple))))
-;;      `(org-document-title ((t (,@headline ,@variable-tuple :height 1.6 :underline nil))))
-;;      `(variable-pitch     ((t ,@variable-tuple)))
-;;      `(fixed-pitch        ((t ,@fixed-tuple)))))
-;;   (corfu-mode -1)
-;;   (electric-pair-mode -1))
-;; 
 (add-hook 'org-mode-hook 'my/org-misc-setup)
+(add-hook 'org-mode-hook 'turn-on-auto-fill)
 
 (use-package org-superstar
   :ensure t
@@ -610,57 +588,10 @@
   (setq org-superstar-leading-bullet ?\s
         org-indent-mode-turns-on-hiding-stars nil))
 
-;; (add-hook 'org-mode-hook 'variable-pitch-mode)
-;; (add-hook 'org-mode-hook 'my/org-misc-setup)
-
 (with-eval-after-load "org"
   (require 'org-tempo))
 
-;; Org Roam
-(use-package org-roam
-  :ensure t
-  :config
-  (org-roam-db-autosync-mode)
-  :custom
-  (org-roam-directory (file-truename "~/Documents/org/roam"))
-  (org-roam-complete-everywhere t)
-  (org-roam-capture-templates `(("r" "Resource Note" plain "%?"
-                                 :if-new (file+head "resources/${slug}.org"
-                                                    ,(my/roam-template "resource" ""))
-                                 :immediate-finish t
-                                 :unnarrowed t)
-                                ("n" "Note" plain "%?"
-                                 :if-new (file+head "notes/${slug}.org"
-                                                    ,(my/roam-template "draft" ""))
-                                 :immediate-finish t
-                                 :unnarrowed t)))
-  (org-roam-node-display-template (concat "${title:100}  "
-                                          (propertize "${tags:50}" 'face 'org-tag))))
-
 (setq org-bookmark-names-plist nil)
-
-(add-hook 'org-mode-hook (lambda () (local-set-key (kbd "C-i") #'org-roam-node-insert)))
-
-;; (add-hook 'org-mode-hook 'org-modern-mode)
-
-;; Search org roam contents using ripgrep
-(defun my/org-roam-rg-search ()
-  (interactive)
-  (let ((consult-ripgrep-command
-         "rg --null --ignore-case --type org --line-buffered --color=always --max-columns=500 --no-heading --line-number . -e ARG OPTS"))
-    (consult-ripgrep org-roam-directory)))
-
-;; Add UI for graphs and note preview
-(use-package websocket :after org-roam)
-(use-package org-roam-ui
-  :after org-roam
-  :defer t
-  :custom
-  (org-roam-ui-update-on-save t))
-
-(use-package olivetti
-  :hook
-  (org-mode . olivetti-mode))
 
 (use-package org-autolist
   :hook (org-mode . org-autolist-mode))
@@ -719,14 +650,6 @@
                             typst-ts-mode-hook
                             lisp-interaction-mode-hook
                             special-mode-hook))
-
-(my/add-to-multiple-hooks 'display-fill-column-indicator-mode
-                          '(c-ts-mode-hook
-                            c++-ts-mode-hook
-                            python-ts-mode-hook
-                            go-ts-mode-hook
-                            js-ts-mode-hook
-                            css-ts-mode-hook))
 
 (use-package web-mode
   :ensure t
@@ -832,6 +755,21 @@
   :config
   (setq elfeed-feeds '(("https://hackernewsrss.com/feed.xml" hn-front))
         elfeed-search-filter "@1-week-ago "))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Denote
+(use-package denote
+  :ensure t
+  :hook (dired-mode . denote-dired-mode)
+  :config
+  (setq denote-directory (expand-file-name "~/Documents/notes")
+        denote-save-buffers nil
+        denote-known-keywords '("programming" "webdev" "philosophy" "list")
+        denote-infer-keywords t
+        denote-sort-keywords t
+        denote-prompts '(title keywords)
+        denote-history-completion-in-prompts nil)
+  (denote-rename-buffer-mode 1))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Other Utils.
@@ -1064,14 +1002,17 @@
  "f" 'find-file
  "l" 'consult-line)
 
-(general-define-key  ;; Org
+(general-define-key  ;; Denote
  :states 'normal
  :keymaps 'override
  :prefix "SPC n"
- "f" 'org-roam-node-find
- "r" 'my/org-roam-rg-search
- "o" 'org-open-at-point
- "b" 'org-mark-ring-goto) 
+ "n" 'denote
+ "o" 'denote-open-or-create
+ "r" 'denote-rename-file
+ "k" 'denote-rename-file-keywords
+ "b" 'denote-backlinks
+ "l" 'denote-add-links
+ "d" 'denote-sort-dired) 
 
 (general-define-key  ;; Help
  :states 'normal

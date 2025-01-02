@@ -66,9 +66,6 @@
 ;; Disable scrollbar
 (scroll-bar-mode -1)
 
-;; Auto-pairs
-(electric-pair-mode t)
-
 ;; switch-to-buffer runs pop-to-buffer-same-window instead
 (setq switch-to-buffer-obey-display-actions t)
 
